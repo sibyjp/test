@@ -1,0 +1,12 @@
+Sub PrintSampleSheetWithDate()
+
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets("sample")
+    
+    ' A3に今日の日付を挿入
+    ws.Range("A3").Value = Format(Date, "yyyy/mm/dd")
+    
+    ' sampleシートを印刷
+    ws.PrintOut
+    
+End Sub
