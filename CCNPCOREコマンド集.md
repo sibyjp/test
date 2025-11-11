@@ -100,3 +100,61 @@ show ip ospf neighbors(10.1.102.10:FULL/DROTHER)
 R3,R10>
 copy run start
 
+## No4(eBGP Neighbor)
+1.ルーターIDにループバック0を使用してeBGPを設定
+2.R3のループバック100及びループバック200ネットワークをAS110及びAS120にアドバタイズ
+
+router bgp 130
+bgp router-id 3.3.3.3
+neighbor 209.165.202.130 remote-as 110
+neighbor 209.165.200.230 remote-as 120
+
+router bgp 130
+network 209.165.203.1 mask 255.255.255.255
+network 200.200.203.2 mask 255.255.255.255
+
+show ip route bgp
+
+## No5(OSPF/Prefix-list)
+1.R1のループバック0のルートはエリア10にアドバタイズされるべきではない。部分的に設定されたプレフィックスリストを利用し、タスクを完了する。
+2.R20ループバック0のルートは、エリア20の外にアドバタイズされるべきではない。部分的に設定されたプレフィックスリストを利用し、タスクを完了する。
+
+show run
+show ip interface brief
+
+ip prefix-list deny_R1_Lo0 seq 1 deny 1.1.1.1/32
+
+router ospf 1
+area 10 filter-list prefix deny_R1_Lo0 in
+
+ping 1.1.1.1
+
+show run
+show ip interface brief
+
+ip prefix-list deny_R20_Lo0 seq 1 deny 20.20.20.20/32
+
+router ospf 1
+area 20 filter-list prefix deny_R20_Lo0 out
+
+ping 20.20.20.20 (失敗)
+
+copy run start
+
+## No6(OSPF DR/Summarization)
+1.R2が常にエリア10のDRになるよう設定
+2.R2で一つのコマンドを設定して、エリア10のルートを一つのルートに集約
+
+int e0/1
+ip ospf priority 255
+
+clear ip ospf process
+
+show ip ospf neighbor
+
+router ospf 10
+area 10 range 10.1.0.0 255.255.0.0
+
+show ip route
+
+copy run start
