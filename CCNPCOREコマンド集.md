@@ -1,6 +1,10 @@
 ## CCNPCOREコマンド集
 
 ## No1(rpvst+LACP)
+1.SW20でRapid PVST+を設定
+2.SW20と30間のトランクは機能していない(e0/0がaccessポート)。修正ののち、ping(10.10.100.10)を通す。
+3.SW10と20の間のLACPポートチャネルは動作していない。修正ののちping(10.10.100
+20)を通す。
 
 show run
 
@@ -25,6 +29,10 @@ ping 10.10.100.20
 copy run start
 
 ## No2(VRF)
+1.Tunnel 0を利用して、R10、R20間のCORPVRFを拡張
+2.事前構成済みのプロファイルを使用してVRFを保護
+3.R10とR20でスタティックルーティングを構成し、VLAN100とVLAN101が互いに通信できるようにする。
+
 show ip interface brief(show runとの差別化、構成図見ればよくね、など)
 
 R10>
@@ -66,10 +74,13 @@ ping vrf CORP 10.101.2.1 source e0/0.100
 copy run start
 
 R20>
-ping vrf CORP 10.101.1.1 source e0/0.101
+ping vrf CORP 10.100.1.1 source e0/0.101
 copy run start
 
 ## No3(OSPF DR BDR)
+1.R20がBDRになるようにR3を設定
+2.DR/BDR選択に参加しないようにR10を設定
+
 R3>
 interface e0/1
 ip ospf priority 255
@@ -88,5 +99,4 @@ show ip ospf neighbors(10.1.102.10:FULL/DROTHER)
 
 R3,R10>
 copy run start
-
 
