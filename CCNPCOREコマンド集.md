@@ -213,3 +213,105 @@ area 10 range 10.1.0.0 255.255.0.0
 show ip route
 
 copy run start
+
+## No7(Trunk UDLD&LACP)
+### タスク
+### ソリューション
+### コマンド
+SW10>
+show run
+
+conf t
+interface e0/0
+switchport trunk encapsulation dot1q
+switchport mode trunk
+end
+
+PC2>
+ping 10.10.100.10
+
+SW10>
+conf t
+int e0/0
+udld port aggressive
+
+interface range e0/2-3
+switchport trunk encapsulation dot1q
+switchport mode trunk
+switchport trunk allowed vlan 1,300
+channel-group 10 mode active
+exit
+
+PC2>
+ping 10.10.100.30
+
+SW10>
+interface e0/1
+spanning-tree portfast
+end
+
+copy run start
+
+## No8(OSPF DR BDR)
+### タスク
+### ソリューション
+### コマンド
+R3>
+conf t
+int e0/1
+ip ospf network point-to-point
+exit
+clear ip ospf process y
+
+R20>
+conf t
+int e0/0
+ip ospf network point-to-point
+exit
+clear ip ospf process y
+
+R3>
+show ip ospf neighbor
+
+R10>
+conf t
+int e0/0
+ip ospf priority 255
+
+R2,R10>
+clear ip ospf process y
+
+R2>
+show ip ospf neighbor 
+
+R3,R10>
+copy run start
+
+## No9(eBGP neighbor)
+### タスク
+### ソリューション
+### コマンド
+
+R1>
+show run
+
+conf t
+router bgp 100
+bgp router-id 10.1.1.100
+neighbor 209.165.200.226 remote-as 200
+neighbor 209.165.202.130 remote-as 300
+
+address-family ipv4
+neighbor 209.165.200.226 active
+neighbor 209.165.202.130 active
+
+network 10.1.1.100 mask 255.255.255.255
+network 209.165.201.0 mask 255.255.255.248
+network 209.165.201.8 mask 255.255.255.248
+
+end
+
+show ip bgp summary
+
+R1>
+copy run start
