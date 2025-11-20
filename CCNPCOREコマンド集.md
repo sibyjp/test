@@ -1,24 +1,6 @@
 ## CCNPCOREコマンド集
 
-## ひな形
-### タスク
-### ソリューション
-### コマンド
-(ソリューションの注釈は任意)
-
 ## No1(rpvst+LACP)
-### タスク
-1.SW20でRapid PVST+を設定
-2.SW20と30間のトランクは機能していない(e0/0がaccessポート)。修正ののち、ping(10.10.100.10)を通す。
-3.SW10と20の間のLACPポートチャネルは動作していない。修正ののちping(10.10.100
-20)を通す。
-
-### ソリューション
-1.割愛
-2.show run(R2)でSW20,30間の修正点を確認し修正。(今回はvlan設定がaccessなのでtrunkに再設定)
-3.Po10に対して2と同様の対処。
-
-### コマンド
 show run
 
 conf t
@@ -42,18 +24,6 @@ ping 10.10.100.20
 copy run start
 
 ## No2(VRF)
-### タスク
-1.Tunnel 0を利用して、R10、R20間のCORPVRFを拡張
-2.事前構成済みのプロファイルを使用してVRFを保護
-3.R10とR20でスタティックルーティングを構成し、VLAN100とVLAN101が互いに通信できるようにする。
-事前構成済みのプロファイルはMyProfile
-
-### ソリューション
-1.R10,R20でそれぞれshow ip interface briefによってvrf設定を確認。destinationが設定されておらず、tunnel0が疎通できていないので、設定ののちpingで疎通確認
-2.1項でプロファイル名を確認し、vrfを保護
-3.R10,R20でそれぞれtunnel0を利用したスタティックルートを構成。設定ののちpingで疎通確認
-
-### コマンド
 show ip interface brief(show runとの差別化、構成図見ればよくね、など)
 
 R10>
@@ -99,15 +69,6 @@ ping vrf CORP 10.100.1.1 source e0/0.101
 copy run start
 
 ## No3(OSPF DR BDR)
-### タスク
-1.R20がBDRになるようにR3を設定
-2.R10がDR/BDR選択に参加しないようにR2を設定
-
-### ソリューション
-1.構成図を見てR20のネクストホップとなるR3のインターフェースで、適切なpriorityを設定。
-2.構成図を見てR10のネクストホップとなるR2のインターフェースで、適切なpriorityを設定。
-
-### コマンド
 R3>
 interface e0/1
 ip ospf priority 255
@@ -128,15 +89,6 @@ R3,R10>
 copy run start
 
 ## No4(eBGP Neighbor)
-### タスク
-1.ルーターIDにループバック0を使用してeBGPを設定
-2.R3のループバック100及びループバック200ネットワークをAS110及びAS120にアドバタイズ
-
-### ソリューション
-1.ループバックアドレスなどを確認するため、R3でshow ip interface briefを行う。のち、eBGPを設定。ルーターidのほか、neighborなども設定する。
-2.BGPにループバック100,200のネットワークを登録する。configを見れば問題なし。show ip route bgpで確認。
-
-### コマンド
 show ip interface brief
 
 router bgp 130
@@ -151,19 +103,6 @@ network 200.200.203.2 mask 255.255.255.255
 show ip route bgp
 
 ## No5(OSPF/Prefix-list)
-### タスク
-1.R1のループバック0のルートはエリア10にアドバタイズされるべきではない。部分的に設定されたプレフィックスリストを利用し、タスクを完了する。
-2.R20ループバック0のルートは、エリア20の外にアドバタイズされるべきではない。部分的に設定されたプレフィックスリストを利用し、タスクを完了する。
-R1のループバックアドレスは1.1.1.1です。
-R20のループバックアドレスは20.20.20.20です。
-R2の初期configで、プレフィックスリスト:deny_R1_Lo0 が部分的に構成されています。
-R3の初期configで、プレフィックスリスト:deny_R20_Lo0 が部分的に構成されています。
-
-### ソリューション
-1.R1とエリア10の境界であるR2において、プレフィックスリストを設定する。R1でのshow runでループバックアドレスの確認、R2でのshow runで事前構成されたプレフィックスリストを確認。R1のLo0を除外するプレフィックスリストを追加したのち、ospfプロセスに内側で適用する。
-2.R20とエリア0の境界であるR3において、プレフィックスリストを設定する。R20でのshow runでループバックアドレスの確認、R3でのshow runで事前構成されたプレフィックスリストを確認。R20のLo0を除外するプレフィックスリストを追加したのち、ospfプロセスに外側で適用する。
-
-### コマンド
 show run
 show ip interface brief
 
@@ -187,16 +126,6 @@ ping 20.20.20.20 (失敗)
 copy run start
 
 ## No6(OSPF DR/Summarization)
-### タスク
-1.R2が常にエリア10のDRになるよう設定
-2.R2で一つのコマンドを設定して、エリア10のルートを一つのルートに集約
-R10の全てのループバックアドレスは、10.1.x.xの範囲内にあるとします。
-
-### ソリューション
-1.構成図でR2→R10のインターフェースを確認し、該当ifで最高のpriorityを設定。R10ではclear ip ospf processで設定をクリアしたのち、show ip ospf neighborで検証。
-2.R2のshow runでospfプロセスIDを確認、R10のshow runでR10のループバックアドレスの確認。のち、R10のループバックアドレスがどのように集約できるか検討し、設定。show ip route で検証。
-
-### コマンド
 int e0/1
 ip ospf priority 255
 
@@ -215,9 +144,6 @@ show ip route
 copy run start
 
 ## No7(Trunk UDLD&LACP)
-### タスク
-### ソリューション
-### コマンド
 SW10>
 show run
 
@@ -253,9 +179,6 @@ end
 copy run start
 
 ## No8(OSPF DR BDR)
-### タスク
-### ソリューション
-### コマンド
 R3>
 conf t
 int e0/1
@@ -288,9 +211,6 @@ R3,R10>
 copy run start
 
 ## No9(eBGP neighbor)
-### タスク
-### ソリューション
-### コマンド
 
 R1>
 show run
@@ -314,4 +234,208 @@ end
 show ip bgp summary
 
 R1>
+copy run start
+
+## No10(eBGP neighbor)
+
+## No11(eBGP neighbor)
+
+## No12()
+R1>
+show run 
+conf t
+
+router ospf 1
+exit
+
+int lo0
+ip ospf 1 area 0
+exit
+
+int e0/0
+ip ospf 1 area 0
+exit
+
+int e0/1
+ip ospf 1 area 0
+end
+
+show ip ospf interface brief
+show ip route ospf
+
+R2,R3>
+show run
+
+R2>
+conf t
+
+router ospf 1
+area 10 range 10.1.0.0 255.255.0.0
+end
+
+show ip route
+
+R3>
+conf t
+router ospf 1
+area 10 range 10.2.0.0 255.255.0.0
+end
+
+show ip route
+
+R1,R2,R3>
+copy run start
+
+## No13()
+
+R10>
+
+show ip eigrp neighbors
+show ip access-list 150
+
+conf t
+ip access-list extended 150
+5 permit eigrp any any 
+end
+
+show ip eigrp neighbors
+
+R20>
+conf t
+
+access-list 100 permit icmp 192.168.24.0 0.0.0.255 any
+
+class-map CoPP_ICMP
+match access-group 100
+
+policy-map CHECK_ICMP
+class CoPP_ICMP
+police 8000
+conform-action transit
+exceed-action drop 
+
+control-plante
+service-policy input CHECK_ICMP
+
+show policy-map control-plane
+
+R10,R20>
+copy run start
+
+## No14()
+
+SW10>
+conf t
+
+no int po11
+int range e0/0-2
+switchport trunk encapsulation dot1q
+switchport mode trunk
+channel-group 11 mode active
+end
+
+show interface trunk
+
+conf t
+
+spanning-tree vlan 10,20 root primary
+
+end
+
+show spanning-tree vlan 10,30
+
+copy run start
+
+## No15()
+
+R30>
+show run
+
+conf t
+router ospf 100
+router-id 10.30.30.30
+network 10.30.30.30 0.0.0.0 area 0
+network 10.20.30.30 0.0.0.255 area 0
+network 10.0.30.30 0.0.0.255 area 0
+network 10.50.40.30 0.0.0.255 area 0
+end
+
+show ip ospf neighbors
+
+router ospf 100
+area 50 range 10.50.0.0 255.255.192.0
+end
+
+show ip route
+copy run start
+
+R10>
+show run
+
+## No16()
+
+conf t
+router ospf 20
+router-id 20.20.20.20
+exit
+
+int loopback 0
+ip ospf 20 area 0
+
+int e0/0
+ip ospf 20 area 0
+exit 
+
+int e0/1
+ip ospf 20 area 0
+exit
+
+int e0/2
+ip ospf 20 area 40
+end
+
+show ip ospf neighbors
+
+conf t
+
+router ospf 20
+area 40 10.40.0.0 255.255.192.0 
+end
+
+show ip route 
+copy run start
+
+## No17()
+R22>
+show run
+
+conf t
+
+ip vrf Finance
+exit
+
+int Tunnel 10
+vrf forwarding Finance
+ip address 10.10.10.2 255.255.255.252
+tunnel source e0/0
+tunnel destination 209.165.200.230
+no shut
+
+end
+
+ping vrf Finance 10.10.10.1
+
+conf t
+
+int e0/1
+vrf forwarding Finance
+ip address 10.22.22.1 255.255.255.252
+exit
+
+ip route vrf Finance 10.10.111.0 255.255.255.0 tunnel 10
+ip route vrf Finance 10.10.222.0 255.255.255.0 10.22.22.2
+exit
+
+ping 10.10.111.1 source vlan 222
+
 copy run start
