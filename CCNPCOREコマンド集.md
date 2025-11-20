@@ -236,9 +236,63 @@ show ip bgp summary
 R1>
 copy run start
 
-## No10(eBGP neighbor)
+## No10()
+R1>
+show run
+conf t
+flow exporter MyFlowExporter
+destination 10.14.1.2
+transport udp 2055
+export protocol netflow v9
+exit
 
-## No11(eBGP neighbor)
+SW1>
+show run
+conf t
+
+monitor session 11 source interface e0/1 both
+monitor session 11 destination interface e1/1 
+exit
+
+show monitor session 11
+
+RT1>
+ip sla schedule 5 life forever start-time now
+exit
+show ip sla summary
+
+R1,SW1>
+copy run start
+
+## No11()
+R1>
+show run
+conf t
+
+int e0/0
+ip flow monitor Monitor-R1Flow input
+ip flow monitor Monitor-R1Flow output
+exit
+
+SW1>
+conf t
+monitor session 12 source vlan 12 both
+monitor session 12 destination interface e1/3
+show monitor session 12
+
+
+R1>
+ip sla 1
+icmp-echo 10.12.1.2 source-interface e0/0
+frequency 300
+exit
+
+ip sla schedule 1 life forever start-time now
+exit
+show ip sla summary
+
+R1,SW1>
+copy run start
 
 ## No12()
 R1>
@@ -325,25 +379,35 @@ copy run start
 ## No14()
 
 SW10>
-conf t
+show run
 
-no int po11
-int range e0/0-2
+conf t
+no int po10
+int po10
 switchport trunk encapsulation dot1q
-switchport mode trunk
+switchport mode trunk 
+exit
+
+int range e0/0-2
+no switchport mode access
+switchport trunk encapsulation dot1q
+switchport mode trunk 
+switchport trunk alloed vlan 20
 channel-group 11 mode active
-end
+exit
 
-show interface trunk
+int po11
+shut
+no shut
+exit
 
-conf t
+show interfaces trunk
 
-spanning-tree vlan 10,20 root primary
+spanning-tree vlan 10,30 root primary
 
-end
+exit
 
 show spanning-tree vlan 10,30
-
 copy run start
 
 ## No15()
